@@ -1,5 +1,10 @@
 """
 Servidor FastAPI.
+
+Documentação interativa (Swagger/OpenAPI):
+- Swagger UI: GET /docs
+- ReDoc: GET /redoc
+- Especificação OpenAPI JSON: GET /openapi.json
 """
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +15,14 @@ from core.config import config
 from core.exceptions import CustomException
 from fastapi.responses import JSONResponse
 from fastapi import Request
+
+# Tags OpenAPI para agrupar e descrever endpoints no Swagger
+OPENAPI_TAGS = [
+    {
+        "name": "chat",
+        "description": "Endpoints de chat: enviar mensagens, listar conversas e recuperar histórico por usuário ou sessão.",
+    },
+]
 
 
 def init_routers(app_: FastAPI) -> None:
@@ -33,11 +46,13 @@ def init_listeners(app_: FastAPI) -> None:
 def create_app() -> FastAPI:
     """Cria e configura a aplicação FastAPI."""
     app_ = FastAPI(
-        title="NutriAI API",
-        description="API para sistema de chat com RAG usando LangGraph e Google Gemini",
+        title="Core-AI API",
+        description="API para sistema de chat nutricional com RAG usando LangGraph e Google Gemini.",
         version="1.0.0",
-        docs_url=None if config.ENV == "production" else "/docs",
-        redoc_url=None if config.ENV == "production" else "/redoc",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
+        openapi_tags=OPENAPI_TAGS,
     )
     
     # # CORS

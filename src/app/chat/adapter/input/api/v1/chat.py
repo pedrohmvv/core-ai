@@ -20,7 +20,12 @@ from app.container import Container
 chat_router = APIRouter()
 
 
-@chat_router.post("", response_model=ChatResponseDTO)
+@chat_router.post(
+    "",
+    response_model=ChatResponseDTO,
+    summary="Enviar mensagem",
+    response_description="Resposta do agente com texto e perguntas de follow-up sugeridas",
+)
 @inject
 async def process_chat_message(
     request: ChatRequestDTO,
@@ -46,7 +51,12 @@ async def process_chat_message(
     return chat_service.to_response_dto(result, request.session_id)
 
 
-@chat_router.get("/user/{user_id}", response_model=UserChatsResponseDTO)
+@chat_router.get(
+    "/user/{user_id}",
+    response_model=UserChatsResponseDTO,
+    summary="Listar chats do usuário",
+    response_description="Lista de chats do usuário ordenados do mais recente ao mais antigo",
+)
 @inject
 def list_user_chats(
     user_id: str,
@@ -64,7 +74,12 @@ def list_user_chats(
     return chat_service.list_user_chats(user_id)
 
 
-@chat_router.get("/session/{session_id}/messages", response_model=ChatMessagesResponseDTO)
+@chat_router.get(
+    "/session/{session_id}/messages",
+    response_model=ChatMessagesResponseDTO,
+    summary="Mensagens da sessão",
+    response_description="Lista de mensagens (user e assistant) da sessão",
+)
 @inject
 def get_session_messages(
     session_id: str,
@@ -82,7 +97,12 @@ def get_session_messages(
     return chat_service.get_session_messages(session_id)
 
 
-@chat_router.get("/user/{user_id}/conversations", response_model=UserConversationsResponseDTO)
+@chat_router.get(
+    "/user/{user_id}/conversations",
+    response_model=UserConversationsResponseDTO,
+    summary="Conversas do usuário",
+    response_description="Todas as conversas do usuário com suas mensagens",
+)
 @inject
 def get_user_conversations(
     user_id: str,

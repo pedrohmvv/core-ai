@@ -146,6 +146,18 @@ uv run python -m src.main --env local --debug
 
 A API fica disponível em `http://0.0.0.0:8000` (ou `APP_PORT`). Em ambiente não-produção, a documentação interativa está em `/docs` e `/redoc`.
 
+### 5.4. Documentação da API (Swagger / OpenAPI)
+
+O projeto está documentado com **OpenAPI 3** (Swagger). Com a API a correr em ambiente **local** ou **dev**:
+
+| Recurso | URL | Descrição |
+|--------|-----|-----------|
+| **Swagger UI** | [http://localhost:8000/docs](http://localhost:8000/docs) | Documentação interativa: testar endpoints e ver schemas |
+| **ReDoc** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Documentação em formato de leitura |
+| **OpenAPI JSON** | [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) | Especificação bruta (para ferramentas ou clientes gerados) |
+
+Em **produção** (`--env prod`), as rotas `/docs`, `/redoc` e `/openapi.json` ficam desativadas por segurança. A documentação é gerada automaticamente a partir dos modelos Pydantic e dos metadados dos endpoints em `src/app/` (tags, `summary`, `response_description`, exemplos nos DTOs).
+
 ---
 
 ## 6. Pipeline de Ingestão (RAG)

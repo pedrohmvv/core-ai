@@ -3,6 +3,15 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
 
+# Exemplos para documentação Swagger/OpenAPI
+CHAT_REQUEST_EXAMPLE = {
+    "chat_input": "Quais alimentos são ricos em vitamina C?",
+    "session_id": "sess-abc-123",
+    "user_id": "user-456",
+    "metadata": {},
+}
+
+
 class ChatRequestDTO(BaseModel):
     """DTO de requisição de chat."""
     chat_input: str = Field(..., description="Mensagem do usuário")
@@ -10,12 +19,26 @@ class ChatRequestDTO(BaseModel):
     user_id: str = Field(..., description="ID do usuário")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadados adicionais")
 
+    model_config = {"json_schema_extra": {"examples": [CHAT_REQUEST_EXAMPLE]}}
+
 
 class ChatResponseDTO(BaseModel):
     """DTO de resposta de chat."""
     response: str = Field(..., description="Resposta do agente")
     session_id: str = Field(..., description="ID da sessão")
     followUpQuestions: List[str] = Field(default_factory=list, description="Perguntas de follow-up geradas")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "response": "Alimentos ricos em vitamina C incluem...",
+                    "session_id": "sess-abc-123",
+                    "followUpQuestions": ["Quanto consumir por dia?", "E para gestantes?"],
+                }
+            ]
+        }
+    }
 
 
 class ChatListItemDTO(BaseModel):
