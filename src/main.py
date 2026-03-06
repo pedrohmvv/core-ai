@@ -27,6 +27,12 @@ import uvicorn
 
 from core.config import config
 
+# Log de diagnóstico: confirma se DATABASE_URL está definida (não expõe o valor)
+logger.info(
+    "DATABASE_URL definida=%s",
+    "sim" if os.environ.get("DATABASE_URL") else "não",
+)
+
 
 @click.command()
 
