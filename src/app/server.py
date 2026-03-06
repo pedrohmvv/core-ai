@@ -1,0 +1,59 @@
+"""
+Servidor FastAPI.
+"""
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.chat.adapter.input.api.v1.chat import chat_router
+from app.container import Container
+from core.config import config
+from core.exceptions import CustomException
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+
+def init_routers(app_: FastAPI) -> None:
+    """Inicializa os routers da aplicação."""
+    container = Container()
+    chat_router.container = container
+    app_.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
+
+
+def init_listeners(app_: FastAPI) -> None:
+    """Inicializa os listeners da aplicação."""
+    # Exception handler
+    @app_.exception_handler(CustomException)
+    async def custom_exception_handler(request: Request, exc: CustomException):
+        return JSONResponse(
+            status_code=exc.code,
+            content={"error_code": exc.error_code, "message": exc.message},
+        )
+
+
+def create_app() -> FastAPI:
+    """Cria e configura a aplicação FastAPI."""
+    app_ = FastAPI(
+        title="NutriAI API",
+        description="API para sistema de chat com RAG usando LangGraph e Google Gemini",
+        version="1.0.0",
+        docs_url=None if config.ENV == "production" else "/docs",
+        redoc_url=None if config.ENV == "production" else "/redoc",
+    )
+    
+    # # CORS
+    # app_.add_middleware(
+    #     CORSMiddleware,
+    #     allow_origins=["*"],
+    #     allow_credentials=True,
+    #     allow_methods=["*"],
+    #     allow_headers=["*"],
+    # )
+    
+    init_routers(app_=app_)
+    init_listeners(app_=app_)
+    
+    return app_
+
+
+app = create_app()
+

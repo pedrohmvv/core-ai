@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+env
+.env
+.env.*
+
+# Testes e dev
+local_tests
+tests
+*.pytest_cache
+.coverage
+htmlcov
+.pytest_cache
+
+# Diretórios de desenvolvimento e documentação
+backups/
+Archive/
+api-boilerplate/
+apoio/
+notebooks/
+reference/
+docs/
+
+# IDE
+.idea
+.vscode
+.cursor
+
+# Outros
+*.md
+Dockerfile
+.dockerignore
+pg_dumb.py
+pg_restore_azure.py
+test_summarization.py
