@@ -46,8 +46,8 @@ def init_listeners(app_: FastAPI) -> None:
 def create_app() -> FastAPI:
     """Cria e configura a aplicação FastAPI."""
     app_ = FastAPI(
-        title="Core-AI API",
-        description="API para sistema de chat nutricional com RAG usando LangGraph e Google Gemini.",
+        title="CORE-AI API",
+        description="API para sistema de análise de exames de sangue e chat nutricional com RAG usando LangGraph e Google Gemini.",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
