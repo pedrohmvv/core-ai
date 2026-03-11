@@ -149,16 +149,16 @@ def summarize_node(state: GraphState, llm) -> dict:
     # Prepara o prompt de sumarização
     if existing_summary:
         summary_prompt = (
-            f"This is the current conversation summary: {existing_summary}\n\n"
-            "Extend the summary above by integrating the new messages below. "
-            "Keep important information from the previous summary and add the new relevant details.\n\n"
-            "**IMPORTANT: The summary MUST ALWAYS be generated in English, regardless of the language of the conversation.**"
+            f"Este é o resumo atual da conversa: {existing_summary}\n\n"
+            "Estenda o resumo acima integrando as novas mensagens abaixo. "
+            "Mantenha as informações importantes do resumo anterior e adicione os novos detalhes relevantes.\n\n"
+            "**IMPORTANTE: O resumo DEVE SEMPRE ser gerado em Português Brasileiro (PT-BR), independentemente do idioma da conversa.**"
         )
     else:
         summary_prompt = (
-            "Create a concise summary of the conversation below to be used as future context. "
-            "Include the main points, decisions made, and relevant information.\n\n"
-            "**IMPORTANT: The summary MUST ALWAYS be generated in English, regardless of the language of the conversation.**"
+            "Crie um resumo conciso da conversa abaixo para ser usado como contexto futuro. "
+            "Inclua os principais pontos, decisões tomadas e informações relevantes.\n\n"
+            "**IMPORTANTE: O resumo DEVE SEMPRE ser gerado em Português Brasileiro (PT-BR), independentemente do idioma da conversa.**"
         )
     
     # Remove ToolMessages órfãos antes de passar para o LLM de sumarização

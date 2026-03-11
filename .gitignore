@@ -22,3 +22,7 @@ data/exames/
 data/drive/
 data/not_processed/
 dump.sql
+data/
+outputs/
+data/exames/
+data/not_processed/

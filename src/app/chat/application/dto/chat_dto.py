@@ -1,6 +1,6 @@
 """DTOs para chat."""
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # Exemplos para documentação Swagger/OpenAPI
@@ -11,15 +11,39 @@ CHAT_REQUEST_EXAMPLE = {
     "metadata": {},
 }
 
+CHAT_REQUEST_PDF_EXAMPLE = {
+    "pdf_base64": "<conteúdo base64 do PDF>",
+    "session_id": "sess-abc-123",
+    "user_id": "user-456",
+    "metadata": {},
+}
+
 
 class ChatRequestDTO(BaseModel):
-    """DTO de requisição de chat."""
-    chat_input: str = Field(..., description="Mensagem do usuário")
+    """DTO de requisição de chat.
+
+    A primeira mensagem do chat deve ser um PDF (pdf_base64).
+    Mensagens seguintes devem ser texto (chat_input).
+    """
+    chat_input: Optional[str] = Field(None, description="Mensagem do usuário (para mensagens após o primeiro PDF)")
+    pdf_base64: Optional[str] = Field(None, description="PDF do documento em base64 (obrigatório na primeira mensagem)")
     session_id: str = Field(..., description="ID da sessão")
     user_id: str = Field(..., description="ID do usuário")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadados adicionais")
 
-    model_config = {"json_schema_extra": {"examples": [CHAT_REQUEST_EXAMPLE]}}
+    @model_validator(mode="after")
+    def require_chat_input_or_pdf(self):
+        if not self.chat_input and not self.pdf_base64:
+            raise ValueError("É necessário enviar 'chat_input' ou 'pdf_base64'.")
+        if self.chat_input and self.pdf_base64:
+            raise ValueError("Envie apenas um dos dois: 'chat_input' ou 'pdf_base64'.")
+        return self
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [CHAT_REQUEST_EXAMPLE, CHAT_REQUEST_PDF_EXAMPLE],
+        },
+    }
 
 
 class ChatResponseDTO(BaseModel):

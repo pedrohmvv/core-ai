@@ -68,7 +68,7 @@ class LangGraphService:
         return ChatGoogleGenerativeAI(
             model=config.GOOGLE_GEMINI_MODEL,
             api_key=config.GOOGLE_API_KEY,
-            temperature=0.2,
+            temperature=0.3,
         )
     
     def _create_pool(self) -> ConnectionPool:

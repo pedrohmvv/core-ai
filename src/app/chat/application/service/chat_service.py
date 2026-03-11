@@ -18,7 +18,7 @@ from app.chat.application.dto.chat_dto import (
     ConversationDTO
 )
 from app.infrastructure.langgraph.service import LangGraphService
-from app.infrastructure.langgraph.utils import get_user_chats
+from app.infrastructure.langgraph.utils import get_user_chats, check_chat_exists
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,10 @@ class ChatService(ChatUseCase):
             langgraph_service: Serviço LangGraph para processamento de mensagens
         """
         self.langgraph_service = langgraph_service
+
+    def chat_exists(self, session_id: str) -> bool:
+        """Verifica se já existe um chat (sessão) para o session_id (primeira mensagem já enviada)."""
+        return check_chat_exists(session_id)
     
     async def process_message(self, command: ChatCommand) -> Dict[str, Any]:
         """Processa mensagem de chat e retorna resposta.

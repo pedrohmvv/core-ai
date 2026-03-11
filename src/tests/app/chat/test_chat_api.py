@@ -31,8 +31,9 @@ def mock_langgraph_service():
 def mock_chat_service(mock_langgraph_service):
     """Mock do ChatService para testes de API."""
     from app.chat.application.dto.chat_dto import ChatResponseDTO
-    
+
     service = Mock(spec=ChatService)
+    service.chat_exists = Mock(return_value=True)  # sessão já existe = mensagem de texto permitida
     service.process_message = AsyncMock(return_value={
         "response": "Sileto é um material avançado com propriedades especiais.",
         "followUpQuestions": {
@@ -43,13 +44,14 @@ def mock_chat_service(mock_langgraph_service):
             ]
         }
     })
-    
+
     def to_response_dto(result, session_id):
         return ChatResponseDTO(
             response=result.get("response", ""),
-            session_id=session_id
+            session_id=session_id,
+            followUpQuestions=result.get("followUpQuestions", {}).get("follow_ups", []),
         )
-    
+
     service.to_response_dto = to_response_dto
     return service
 
@@ -84,16 +86,17 @@ def client(app):
 
 
 def test_chat_endpoint_success(client):
-    """Testa o endpoint de chat com sucesso."""
+    """Testa o endpoint de chat com sucesso (mensagem de texto em sessão existente)."""
     response = client.post(
         "/api/v1/chat",
         json={
             "chat_input": "What is Sileto?",
             "session_id": "test-session-123",
-            "metadata": {}
-        }
+            "user_id": "user-456",
+            "metadata": {},
+        },
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "response" in data
@@ -106,11 +109,12 @@ def test_chat_endpoint_missing_fields(client):
     response = client.post(
         "/api/v1/chat",
         json={
-            "session_id": "test-session-123"
-        }
+            "session_id": "test-session-123",
+            "user_id": "user-456",
+        },
     )
-    
-    assert response.status_code == 422  # Validation error
+
+    assert response.status_code == 422  # Validation error (falta chat_input ou pdf_base64)
 
 
 def test_chat_endpoint_empty_input(client):
@@ -120,12 +124,13 @@ def test_chat_endpoint_empty_input(client):
         json={
             "chat_input": "",
             "session_id": "test-session-123",
-            "metadata": {}
-        }
+            "user_id": "user-456",
+            "metadata": {},
+        },
     )
-    
-    # Deve aceitar input vazio (pode ser um follow-up)
-    assert response.status_code in [200, 422]
+
+    # chat_input vazio pode ser rejeitado (422) ou processado
+    assert response.status_code in [200, 400, 422]
 
 
 def test_chat_endpoint_with_metadata(client):
@@ -135,14 +140,41 @@ def test_chat_endpoint_with_metadata(client):
         json={
             "chat_input": "Tell me about Sileto",
             "session_id": "test-session-456",
+            "user_id": "user-123",
             "metadata": {
                 "source": "web",
-                "user_id": "user-123"
-            }
-        }
+            },
+        },
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["session_id"] == "test-session-456"
+
+
+def test_chat_first_message_must_be_pdf(client, mock_chat_service):
+    """Primeira mensagem do chat deve ser PDF; texto deve retornar 400."""
+    from dependency_injector.providers import Singleton
+    from app.container import Container
+    from app.chat.adapter.input.api.v1.chat import chat_router
+    from app.server import create_app
+
+    mock_chat_service.chat_exists = Mock(return_value=False)  # nova sessão
+    Container.chat_service.override(Singleton(lambda: mock_chat_service))
+    try:
+        app = create_app()
+        c = TestClient(app)
+        response = c.post(
+            "/api/v1/chat",
+            json={
+                "chat_input": "What is Sileto?",
+                "session_id": "new-session-789",
+                "user_id": "user-456",
+                "metadata": {},
+            },
+        )
+        assert response.status_code == 400
+        assert "primeira mensagem" in response.json().get("detail", "").lower() or "pdf" in response.json().get("detail", "").lower()
+    finally:
+        Container.chat_service.reset_override()
 
