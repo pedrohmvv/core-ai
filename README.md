@@ -27,10 +27,11 @@ O frontend consome a **API REST** (FastAPI); integrações com interfaces (e.g. 
    PDFs em `data/documentos` (ou `data/not_processed`) são processados por um pipeline (notebook `notebooks/embeddings.ipynb`): extração de texto, chunking, embeddings locais (HuggingFace) e gravação na tabela `pg_langchain_vectors`. Esta base é a **única** fonte de verdade para recomendações clínicas.
 
 2. **Caminho de chat interativo**  
-   O utilizador envia mensagens via API. O **LangGraph** orquestra o fluxo:
+   O utilizador envia mensagens via API. A **primeira mensagem** de cada conversa deve ser **sempre um PDF** (exames em base64); as seguintes são **texto** (`chat_input`). O backend extrai o texto do PDF (pypdf) e processa no mesmo fluxo. Opcionalmente, o cliente envia **dados do paciente** (sexo, idade, alergias, remédios em uso), usados no prompt do agente para contextualizar o relatório (dosagens, interações fármaco-nutriente, contraindicações).  
+   O **LangGraph** orquestra o fluxo:
    - **create_chat** → criação do registo de conversa (tabela `chat`) se for nova sessão.
    - **summarize** → se houver muitas mensagens da IA, gera resumo e reduz contexto (memória em `chat_summaries`).
-   - **run_agent** → agente com uma tool de busca (RAG) no PGVector; o LLM responde com base **apenas** nos documentos recuperados e com citações inline.
+   - **run_agent** → agente com uma tool de busca (RAG) no PGVector; o LLM responde com base **apenas** nos documentos recuperados e com citações inline; o prompt inclui o **Perfil do Paciente** (sexo, idade, alergias, remédios) quando informado.
    - **check_error** → roteamento para resposta de sucesso ou de erro.
    - **return_response / return_error** → formatação da resposta.
    - **run_follow_up_llm** → geração de perguntas de follow-up a partir da resposta e dos documentos (lacunas clínicas).
@@ -38,7 +39,7 @@ O frontend consome a **API REST** (FastAPI); integrações com interfaces (e.g. 
 
 ### Estado LangGraph
 
-O estado do grafo (`GraphState`) inclui: `chatInput`, `sessionId`, `userId`, `messages` (reducer `operator.add`), `response`, `followUpQuestions`, `summary`, `lastSourceDocuments`, e flags de erro. O **checkpointer** (PostgresSaver) persiste o estado por `thread_id` (session_id), permitindo conversas longas com memória.
+O estado do grafo (`GraphState`) inclui: `chatInput`, `sessionId`, `userId`, `messages` (reducer `operator.add`), `response`, `followUpQuestions`, `summary`, `lastSourceDocuments`, **`patientInfo`** (sexo, idade, alergias, remedios — usados no prompt do agente) e flags de erro. O **checkpointer** (PostgresSaver) persiste o estado por `thread_id` (session_id), permitindo conversas longas com memória. O `patientInfo` enviado na primeira mensagem (com o PDF) fica guardado no checkpoint e é reutilizado nas mensagens seguintes se o cliente não enviar de novo.
 
 ---
 
@@ -156,7 +157,7 @@ O projeto está documentado com **OpenAPI 3** (Swagger). Com a API a correr em a
 | **ReDoc** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Documentação em formato de leitura |
 | **OpenAPI JSON** | [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) | Especificação bruta (para ferramentas ou clientes gerados) |
 
-Em **produção** (`--env prod`), as rotas `/docs`, `/redoc` e `/openapi.json` ficam desativadas por segurança. A documentação é gerada automaticamente a partir dos modelos Pydantic e dos metadados dos endpoints em `src/app/` (tags, `summary`, `response_description`, exemplos nos DTOs).
+Em **produção** (`--env prod`), as rotas `/docs`, `/redoc` e `/openapi.json` ficam desativadas por segurança. Para uma **referência textual** dos endpoints, payloads e regras de negócio (primeira mensagem = PDF, dados do paciente), consulte **[docs/API.md](docs/API.md)**.
 
 ---
 
@@ -228,8 +229,12 @@ nutri-ai/
 ├── init-db/
 │   ├── 01-init-vector.sql         # CREATE EXTENSION vector
 │   └── 01-chat-tables.sql         # chat, chat_summaries, chat_history
+├── docs/
+│   ├── API.md                    # Documentação da API (endpoints, payloads, regras)
+│   └── DEPLOY-RAILWAY.md
 ├── notebooks/
-│   └── embeddings.ipynb          # Pipeline RAG (PDF → chunks → pg_langchain_vectors)
+│   ├── embeddings.ipynb          # Pipeline RAG (PDF → chunks → pg_langchain_vectors)
+│   └── api_chat_test.ipynb      # Testes manuais da API de chat (PDF + paciente + follow-up)
 ├── pyproject.toml                 # Dependências (uv)
 ├── uv.lock
 ├── Dockerfile                    # Imagem para deploy (python 3.13, uv)

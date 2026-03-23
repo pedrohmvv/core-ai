@@ -51,11 +51,23 @@ class ChatService(ChatUseCase):
             Dicionário com 'response' e 'followUpQuestions'
         """
         logger.info(f"Processando mensagem - Session: {command.session_id} - User: {command.user_id}")
+        patient_info = None
+        if any(
+            getattr(command, k, None) not in (None, [], "")
+            for k in ("sexo", "idade", "alergias", "remedios")
+        ):
+            patient_info = {
+                "sexo": command.sexo,
+                "idade": command.idade,
+                "alergias": command.alergias or [],
+                "remedios": command.remedios or [],
+            }
         result = await self.langgraph_service.invoke(
             chat_input=command.chat_input,
             session_id=command.session_id,
             user_id=command.user_id,
-            is_follow_up=command.is_follow_up
+            is_follow_up=command.is_follow_up,
+            patient_info=patient_info,
         )
         logger.info(f"Mensagem processada - Session: {command.session_id} - User: {command.user_id}")
         return result

@@ -137,32 +137,62 @@ class LangGraphService:
             
         return workflow.compile()
     
-    async def invoke(self, chat_input: str, session_id: str, user_id: str, is_follow_up: bool = False) -> Dict[str, Any]:
+    async def invoke(
+        self,
+        chat_input: str,
+        session_id: str,
+        user_id: str,
+        is_follow_up: bool = False,
+        patient_info: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
         """
         Executa o fluxo completo do agente e retorna a resposta e as perguntas de follow-up.
-        
+
         Args:
             chat_input: Mensagem do usuário
             session_id: ID da sessão
             user_id: ID do usuário
             is_follow_up: Se é um follow-up automático
-        
+            patient_info: Opcional. Dict com sexo, idade, alergias, remedios. Se omitido em mensagens seguintes, usa o do checkpoint.
+
         Returns:
             Dicionário com 'response' e 'followUpQuestions'
         """
         logger.info(f"LangGraphService.invoke - Session: {session_id} - User: {user_id} - isFollowUp: {is_follow_up}")
-        
+
         # Garante que a store está inicializada
         await self._ensure_store()
-        
-        try:
 
+        try:
             # Carrega o resumo do banco de dados
             loop = asyncio.get_event_loop()
             existing_summary = await loop.run_in_executor(
                 None,
-                lambda: get_chat_summary_from_db(session_id)
+                lambda: get_chat_summary_from_db(session_id),
             )
+
+            # Resolve patientInfo: request tem prioridade; senão usa o do checkpoint
+            patient_info_resolved: Dict[str, Any] = {}
+            if patient_info and any(
+                patient_info.get(k) not in (None, [], "")
+                for k in ("sexo", "idade", "alergias", "remedios")
+            ):
+                patient_info_resolved = {
+                    "sexo": patient_info.get("sexo"),
+                    "idade": patient_info.get("idade"),
+                    "alergias": patient_info.get("alergias") or [],
+                    "remedios": patient_info.get("remedios") or [],
+                }
+            else:
+                def _get_patient_from_checkpoint():
+                    try:
+                        thread_config = {"configurable": {"thread_id": session_id, "user_id": user_id}}
+                        snapshot = self.app.get_state(thread_config)
+                        return (snapshot.values or {}).get("patientInfo") or {}
+                    except Exception:
+                        return {}
+
+                patient_info_resolved = await loop.run_in_executor(None, _get_patient_from_checkpoint)
 
             # Prepara o estado inicial
             initial_state: GraphState = {
@@ -171,13 +201,15 @@ class LangGraphService:
                 "userId": user_id,
                 "isFollowUp": is_follow_up,
                 "systemPrompt": "",
-                "messages": [],  # O checkpointer carregará o histórico automaticamente
+                "messages": [],
                 "response": "",
                 "followUpQuestions": [],
-                "summary": existing_summary,  # Resumo carregado do banco de dados
+                "lastSourceDocuments": "",
+                "summary": existing_summary,
+                "patientInfo": patient_info_resolved,
                 "error": False,
                 "errorMessage": "",
-                "errorException": ""
+                "errorException": "",
             }
 
             logger.info(f"Executando grafo para sessão: {session_id} - User: {user_id}")

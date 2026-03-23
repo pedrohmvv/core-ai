@@ -15,6 +15,10 @@ CHAT_REQUEST_PDF_EXAMPLE = {
     "pdf_base64": "<conteúdo base64 do PDF>",
     "session_id": "sess-abc-123",
     "user_id": "user-456",
+    "sexo": "M",
+    "idade": 35,
+    "alergias": ["lactose"],
+    "remedios": ["Omeprazol 20mg"],
     "metadata": {},
 }
 
@@ -24,11 +28,16 @@ class ChatRequestDTO(BaseModel):
 
     A primeira mensagem do chat deve ser um PDF (pdf_base64).
     Mensagens seguintes devem ser texto (chat_input).
+    Informações do paciente (sexo, idade, alergias, remedios) são opcionais e ajudam na produção do relatório.
     """
     chat_input: Optional[str] = Field(None, description="Mensagem do usuário (para mensagens após o primeiro PDF)")
     pdf_base64: Optional[str] = Field(None, description="PDF do documento em base64 (obrigatório na primeira mensagem)")
     session_id: str = Field(..., description="ID da sessão")
     user_id: str = Field(..., description="ID do usuário")
+    sexo: Optional[str] = Field(None, description="Sexo do paciente (ex: M, F, Outro)")
+    idade: Optional[int] = Field(None, description="Idade do paciente em anos")
+    alergias: List[str] = Field(default_factory=list, description="Lista de alergias do paciente")
+    remedios: List[str] = Field(default_factory=list, description="Lista de remédios que o paciente toma")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadados adicionais")
 
     @model_validator(mode="after")

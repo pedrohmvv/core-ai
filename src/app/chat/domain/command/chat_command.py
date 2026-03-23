@@ -1,6 +1,6 @@
 """Comandos de domínio para chat."""
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 @dataclass
@@ -11,4 +11,8 @@ class ChatCommand:
     user_id: str
     is_follow_up: bool = False
     metadata: Optional[Dict[str, Any]] = None
+    sexo: Optional[str] = None
+    idade: Optional[int] = None
+    alergias: Optional[List[str]] = None
+    remedios: Optional[List[str]] = None
 

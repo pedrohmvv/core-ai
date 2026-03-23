@@ -79,6 +79,10 @@ async def process_chat_message(
         user_id=request.user_id,
         is_follow_up=False,
         metadata=request.metadata,
+        sexo=request.sexo,
+        idade=request.idade,
+        alergias=request.alergias or [],
+        remedios=request.remedios or [],
     )
     result = await chat_service.process_message(command)
     return chat_service.to_response_dto(result, request.session_id)

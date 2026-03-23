@@ -2,6 +2,15 @@ from typing import TypedDict, Annotated, Dict, Any, List
 from langchain_core.messages import BaseMessage
 import operator
 
+
+class PatientInfo(TypedDict, total=False):
+    """Informações do paciente para contexto do relatório."""
+    sexo: str
+    idade: int
+    alergias: List[str]
+    remedios: List[str]
+
+
 class GraphState(TypedDict):
     """Estado do grafo LangGraph"""
     chatInput: str  # Input do usuário
@@ -12,10 +21,9 @@ class GraphState(TypedDict):
     messages: Annotated[list[BaseMessage], operator.add]  # Histórico de mensagens
     response: str  # Resposta final do agente
     followUpQuestions: List[str]  # Perguntas de follow-up geradas
-    #lastUserMessage: str  - Última mensagem do usuário para contexto de follow-up
-    #lastAgentMessage: str  - Última resposta do agente para contexto de follow-up
     lastSourceDocuments: str  # Documentos RAG associados à última resposta (para follow-up)
     summary: str  # Resumo acumulado da conversa para contexto histórico
+    patientInfo: PatientInfo  # Sexo, idade, alergias, remédios (para o prompt do agente)
     error: bool
     errorMessage: str
     errorException: str

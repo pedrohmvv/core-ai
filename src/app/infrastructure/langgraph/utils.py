@@ -12,22 +12,32 @@ from app.chat.application.exception import BadRequestException, RateLimitExcepti
 logger = logging.getLogger(__name__)
 
 
-def _content_to_string(content: Union[str, List[Any]]) -> str:
+def _content_to_string(content: Union[str, List[Any], Any]) -> str:
     """
     Normaliza o conteúdo de uma mensagem (ex.: AIMessage.content) para string.
-    O Gemini pode retornar content como lista de blocos [{"type": "text", "text": "..."}].
+    O Gemini pode retornar content como lista de blocos [{"type": "text", "text": "..."}]
+    ou com "parts" aninhados; aceita também blocos que são só strings.
     """
+    if content is None:
+        return ""
     if isinstance(content, str):
         return content
     if isinstance(content, list):
         parts = []
         for block in content:
-            if isinstance(block, dict) and "text" in block:
-                parts.append(str(block["text"]))
-            elif isinstance(block, str):
+            if isinstance(block, str):
                 parts.append(block)
-        return "\n".join(parts) if parts else ""
-    return str(content) if content is not None else ""
+            elif isinstance(block, dict):
+                if "text" in block:
+                    parts.append(str(block["text"]))
+                elif "parts" in block:
+                    parts.append(_content_to_string(block["parts"]))
+                elif "inline_data" in block:
+                    continue
+            else:
+                parts.append(str(block))
+        return "\n".join(p for p in parts if p) if parts else ""
+    return str(content)
 
 
 def get_error_message_from_exception(exception: Exception) -> str:

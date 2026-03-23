@@ -252,14 +252,18 @@ def agent_node(state: GraphState, llm) -> dict:
     user_id = state.get("userId", "N/A")
     logger.info(f"Node: agent_node (start) - Session: {session_id} - User: {user_id}")
 
-    # Renderiza o system_prompt com o resumo (se existir)
-    # O template agent.jinja2 já inclui o resumo quando chat_summary é fornecido
+    # Renderiza o system_prompt com o resumo e informações do paciente
     existing_summary = state.get("summary", "")
     if existing_summary:
         logger.info(f"Resumo histórico disponível ({len(existing_summary)} caracteres) - será renderizado no system_prompt")
-    
+
+    patient_info = state.get("patientInfo") or {}
     system_prompt = load_prompt("agent.jinja2").render(
         chat_summary=existing_summary,
+        patient_sexo=patient_info.get("sexo") or "",
+        patient_idade=patient_info.get("idade"),
+        patient_alergias=patient_info.get("alergias") or [],
+        patient_remedios=patient_info.get("remedios") or [],
     )
     
     messages_from_state = state.get("messages", [])
@@ -385,9 +389,17 @@ def agent_node(state: GraphState, llm) -> dict:
     if last_source_documents:
         logger.debug(f"Documentos RAG encontrados: {len(tool_contents)}")
 
-    # Gemini pode retornar content como lista de blocos; normaliza para string
-    raw_content = result["messages"][-1].content if result["messages"] else ""
-    response_content = _content_to_string(raw_content)
+    # Resposta = conteúdo da última AIMessage com texto (evita usar ToolMessage ou AIMessage vazia)
+    # Gemini pode retornar content como lista de blocos; _content_to_string normaliza
+    response_content = ""
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage):
+            raw = getattr(msg, "content", None)
+            response_content = _content_to_string(raw)
+            if response_content.strip():
+                break
+    if not response_content.strip():
+        logger.warning("Nenhuma AIMessage com conteúdo encontrada no resultado do agente; response vazio.")
 
     return {
         "lastSourceDocuments": last_source_documents,
