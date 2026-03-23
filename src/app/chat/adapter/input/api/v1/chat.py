@@ -6,10 +6,13 @@ incluindo processamento de mensagens, listagem de chats e recuperação de hist�
 A primeira mensagem do chat deve ser sempre um PDF (enviado em pdf_base64).
 As demais mensagens devem ser texto (chat_input).
 """
+from typing import Annotated
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.chat.application.dto.chat_dto import (
+    CHAT_REQUEST_OPENAPI_EXAMPLES,
     ChatRequestDTO,
     ChatResponseDTO,
     UserChatsResponseDTO,
@@ -64,7 +67,7 @@ def _resolve_chat_input(request: ChatRequestDTO, chat_service: ChatService) -> s
 )
 @inject
 async def process_chat_message(
-    request: ChatRequestDTO,
+    request: Annotated[ChatRequestDTO, Body(openapi_examples=CHAT_REQUEST_OPENAPI_EXAMPLES)],
     chat_service: ChatService = Depends(Provide[Container.chat_service]),
 ) -> ChatResponseDTO:
     """Processa mensagem de chat e retorna resposta com follow-ups.

@@ -11,8 +11,9 @@ CHAT_REQUEST_EXAMPLE = {
     "metadata": {},
 }
 
+# PDF mínimo com texto extraível (exame fictício) — válido para testar em "Try it out"
 CHAT_REQUEST_PDF_EXAMPLE = {
-    "pdf_base64": "<conteúdo base64 do PDF>",
+    "pdf_base64": "JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA2IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDExMQo+PgpzdHJlYW0KeJwzUvDiMtAzNVco53IKUdB3M1QwNNIzMFAISVNwDQEJGRvqGVoomFua6pmbK4SkKGi4ViTmplopeKTm5qcXJeYm6kGYOflJmXmJCoYmCun6KT56Cu45mcmpuZmJCpZGCrlgIU2FkCyQoQBqph6GCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0ZvbnQgPDwvRjEgNSAwIFI+PgovUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KPj4KZW5kb2JqCjcgMCBvYmoKPDwKL0NyZWF0aW9uRGF0ZSAoRDoyMDI2MDMyMzEyMDAyMFopCj4+CmVuZG9iagp4cmVmCjAgOAowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDEwMiAwMDAwMCBuIAowMDAwMDAwMjA1IDAwMDAwIG4gCjAwMDAwMDAyODUgMDAwMDAgbiAKMDAwMDAwMDQ2OCAwMDAwMCBuIAowMDAwMDAwNTY1IDAwMDAwIG4gCjAwMDAwMDA2NTIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA4Ci9Sb290IDIgMCBSCi9JbmZvIDcgMCBSCi9JRCBbPDkxOTFBNDY5MjFBQUZCODZCQkUyM0Q3M0VDNkZENDExPjw5MTkxQTQ2OTIxQUFGQjg2QkJFMjNENzNFQzZGRDQxMT5dCj4+CnN0YXJ0eHJlZgo3MDcKJSVFT0YK",
     "session_id": "sess-abc-123",
     "user_id": "user-456",
     "sexo": "M",
@@ -20,6 +21,23 @@ CHAT_REQUEST_PDF_EXAMPLE = {
     "alergias": ["lactose"],
     "remedios": ["Omeprazol 20mg"],
     "metadata": {},
+}
+
+# Exemplos nomeados para o Swagger UI (dropdown "Examples" no POST /api/v1/chat)
+CHAT_REQUEST_OPENAPI_EXAMPLES = {
+    "pdf_primeira_mensagem": {
+        "summary": "1ª mensagem — PDF (base64)",
+        "description": (
+            "Obrigatório na primeira mensagem da sessão: envie o exame em PDF codificado em base64. "
+            "Opcionalmente inclua sexo, idade, alergias e remédios para o relatório nutricional."
+        ),
+        "value": CHAT_REQUEST_PDF_EXAMPLE,
+    },
+    "mensagem_texto": {
+        "summary": "Mensagens seguintes — texto",
+        "description": "Após o primeiro PDF, use apenas chat_input para continuar a conversa (mesma session_id).",
+        "value": CHAT_REQUEST_EXAMPLE,
+    },
 }
 
 
@@ -47,12 +65,6 @@ class ChatRequestDTO(BaseModel):
         if self.chat_input and self.pdf_base64:
             raise ValueError("Envie apenas um dos dois: 'chat_input' ou 'pdf_base64'.")
         return self
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [CHAT_REQUEST_EXAMPLE, CHAT_REQUEST_PDF_EXAMPLE],
-        },
-    }
 
 
 class ChatResponseDTO(BaseModel):
