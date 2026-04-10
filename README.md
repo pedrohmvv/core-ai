@@ -219,13 +219,21 @@ nutri-ai/
 │   │   ├── config.py              # Configuração (.env, DB, Gemini, embeddings)
 │   │   └── db/                    # Sessão e utilitários DB
 │   └── app/
-│       ├── server.py              # FastAPI app (NutriAI API)
-│       ├── container.py           # Dependency injection
-│       ├── chat/                  # Casos de uso, DTOs, API v1 chat
-│       └── infrastructure/
-│           ├── langgraph/          # service, nodes, state, tools, utils
-│           ├── vector_store/      # PGVectorStore, embeddings HuggingFace
-│           └── prompts/            # agent.jinja2, follow_up.jinja2
+│   │   ├── server.py              # FastAPI app (NutriAI API)
+│   │   ├── container.py           # Dependency injection
+│   │   ├── chat/                  # Casos de uso, DTOs, API v1 chat
+│   │   └── infrastructure/
+│   │     ├── langgraph/          # service, nodes, state, tools, utils
+│   │     ├── vector_store/      # PGVectorStore, embeddings HuggingFace
+│   │     └── prompts/            # agent.jinja2, follow_up.jinja2
+│   └── tests/
+│       ├── app/       
+│       ├── __init__.py
+│       ├── conftest.py
+│       ├── run_tests.bat
+│       ├── run_tests.sh
+│       └── README.md
+
 ├── init-db/
 │   ├── 01-init-vector.sql         # CREATE EXTENSION vector
 │   └── 01-chat-tables.sql         # chat, chat_summaries, chat_history
