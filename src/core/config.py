@@ -39,11 +39,13 @@ else:
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 GOOGLE_GEMINI_MODEL = os.environ.get("GOOGLE_GEMINI_MODEL") or "gemini-2.5-flash"
 
-# Embedding model (HuggingFace sentence-transformers)
+# Embedding model (Google Generative AI)
 EMBEDDING_MODEL_NAME = os.environ.get(
     "EMBEDDING_MODEL_NAME",
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "models/gemini-embedding-001",
 )
+
+EMBEDDING_DIMENSIONS = int(os.environ.get("EMBEDDING_DIMENSIONS", "768"))
 
 # Railway e outros PaaS injetam PORT; localmente usa APP_PORT ou 8000
 APP_PORT = int(os.environ.get("PORT") or os.environ.get("APP_PORT") or 8000)
@@ -67,8 +69,9 @@ class Config(BaseSettings):
     GOOGLE_API_KEY: Optional[str] = GOOGLE_API_KEY
     GOOGLE_GEMINI_MODEL: str = GOOGLE_GEMINI_MODEL
 
-    # Embedding model (HuggingFace)
+    # Embedding model (Google Generative AI)
     EMBEDDING_MODEL_NAME: str = EMBEDDING_MODEL_NAME
+    EMBEDDING_DIMENSIONS: int = EMBEDDING_DIMENSIONS
 
     # Database URIs
     DB_URI_ASYNC: str = DB_URI_ASYNC

@@ -1,22 +1,22 @@
 """
-Módulo para criação do serviço de embeddings com HuggingFace (sentence-transformers).
+Módulo para criação do serviço de embeddings com Google Generative AI.
 """
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from core.config import config
 
 
-def create_embeddings_service() -> HuggingFaceEmbeddings:
+def create_embeddings_service() -> GoogleGenerativeAIEmbeddings:
     """
-    Cria o serviço de embeddings usando o modelo HuggingFace configurado.
-    
-    Modelo padrão: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2,
-    adequado para português e buscas semânticas multilingues.
-    
-    Returns:
-        HuggingFaceEmbeddings configurado e pronto para uso
-    """
-    return HuggingFaceEmbeddings(
-        model_name=config.EMBEDDING_MODEL_NAME,
-    )
+    Cria o serviço de embeddings usando o modelo Google Generative AI configurado.
 
+    Modelo padrão: models/gemini-embedding-001 com output_dimensionality=768,
+    adequado para português e buscas semânticas multilingues.
+
+    Returns:
+        GoogleGenerativeAIEmbeddings configurado e pronto para uso
+    """
+    return GoogleGenerativeAIEmbeddings(
+        model=config.EMBEDDING_MODEL_NAME,
+        output_dimensionality=768,
+    )
