@@ -1,0 +1,24 @@
+name: Sleep Railway (21h)
+
+on:
+  schedule:
+    - cron: '0 0 * * 1-5'   # 21h BRT = 00h UTC (seg-sex)
+
+jobs:
+  sleep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove latest deployment
+        run: |
+          # Busca o deploymentId atual e cancela
+          DEPLOYMENT_ID=$(curl -s -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "query": "query { deployments(first: 1, input: { serviceId: \"${{ secrets.RAILWAY_SERVICE_ID }}\", environmentId: \"${{ secrets.RAILWAY_ENVIRONMENT_ID }}\" }) { edges { node { id } } } }"
+            }' | jq -r '.data.deployments.edges[0].node.id')
+          
+          curl -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { deploymentRemove(id: \\\"$DEPLOYMENT_ID\\\") }\"}"

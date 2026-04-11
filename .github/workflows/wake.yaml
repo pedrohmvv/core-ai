@@ -1,0 +1,18 @@
+name: Wake Railway (07h)
+
+on:
+  schedule:
+    - cron: '0 10 * * 1-5'  # 07h BRT = 10h UTC (seg-sex)
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Redeploy service
+        run: |
+          curl -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "query": "mutation { serviceInstanceRedeploy(serviceId: \"${{ secrets.RAILWAY_SERVICE_ID }}\", environmentId: \"${{ secrets.RAILWAY_ENVIRONMENT_ID }}\") }"
+            }'
