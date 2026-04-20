@@ -6,15 +6,28 @@ Documentação interativa (Swagger/OpenAPI):
 - ReDoc: GET /redoc
 - Especificação OpenAPI JSON: GET /openapi.json
 """
+import logging
+import sys
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Depends
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.chat.adapter.input.api.v1.chat import chat_router
 from app.container import Container
+from app.infrastructure.vector_store import create_vector_store
 from core.config import config
 from core.exceptions import CustomException
 from fastapi.responses import JSONResponse
 from fastapi import Request
+
+logger = logging.getLogger(__name__)
 
 # Tags OpenAPI para agrupar e descrever endpoints no Swagger
 OPENAPI_TAGS = [
@@ -23,6 +36,15 @@ OPENAPI_TAGS = [
         "description": "Endpoints de chat: enviar mensagens, listar conversas e recuperar histórico por usuário ou sessão.",
     },
 ]
+
+
+@asynccontextmanager
+async def lifespan(app_: FastAPI):
+    """Inicializa recursos compartilhados antes de aceitar requisições."""
+    logger.info("Inicializando Vector Store...")
+    await create_vector_store()
+    logger.info("Vector Store pronta.")
+    yield
 
 
 def init_routers(app_: FastAPI) -> None:
@@ -53,6 +75,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         openapi_tags=OPENAPI_TAGS,
+        lifespan=lifespan,
     )
     
     # # CORS
